@@ -16,7 +16,7 @@ pub unsafe fn enable<T, F: FnOnce() -> T>(f: F) -> T {
     let mut old = libc::stack_t { ss_sp: std::ptr::null_mut(), ss_flags: 0, ss_size: 0 };
 
     let ret = libc::sigaltstack(&stack, &mut old);
-    assert_eq!(ret, 1, "sigaltstack failed");
+    assert_eq!(ret, 0, "sigaltstack failed");
     let sig_action = signal::SigAction::new(
         signal::SigHandler::Handler(handle_sigsegv),
         signal::SaFlags::SA_NODEFER | signal::SaFlags::SA_ONSTACK,
