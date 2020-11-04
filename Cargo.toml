@@ -1,0 +1,18 @@
+[package]
+name = "backtrace-on-stack-overflow"
+description = "Best effort backtrace printing"
+version = "0.1.0"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/matklad/backtrace-on-stack-overflow"
+authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]
+edition = "2018"
+
+[workspace]
+members = ["xtask"]
+
+exclude = [".github/", "bors.toml", "rustfmt.toml"]
+
+[dependencies]
+backtrace = "0.3.54"
+libc = "0.2.80"
+nix = "0.19.0"
