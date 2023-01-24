@@ -86,6 +86,7 @@ pub unsafe fn enable() {
             signal::SigSet::empty(),
         );
         signal::sigaction(signal::SIGSEGV, &sig_action).unwrap();
+        signal::sigaction(signal::SIGABRT, &sig_action).unwrap();
     })
 }
 
