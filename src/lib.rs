@@ -23,7 +23,7 @@
 //! ```console
 //! λ bat src/main.rs
 //! fn main() {
-//!     unsafe { backtrace_on_stack_overflow::enable() };
+//!     unsafe { backtrace_on_stack_overflow::enable_with_limit(10) };
 //!     f(92)
 //! }
 //!
@@ -55,10 +55,18 @@
 //!              at src/main.rs:7:5
 //!   10: so::f
 //!              at src/main.rs:7:5
+//!
+//! ... and 261982 more
 //! ```
 //!
 //! This crate works for debugging, but is unsuited for being enabled in production.
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use nix::sys::signal;
+
+use backtrace::{Backtrace, BacktraceFrame};
+
+static mut COUNT: usize = 10;
 
 /// Best effort printing of backtrace on stack overflow.
 ///
@@ -90,7 +98,25 @@ pub unsafe fn enable() {
     })
 }
 
+/// Like [`enable`], but only print the first `count` frames of the backtrace.
+pub unsafe fn enable_with_limit(count: usize) {
+    COUNT = count;
+    enable();
+}
+
 extern "C" fn handle_sigsegv(_: i32) {
-    eprintln!("Stack Overflow:\n{:?}", backtrace::Backtrace::new());
-    std::process::abort();
+    // not using Once to avoid adding extra frames
+    static HANDLED: AtomicBool = AtomicBool::new(false);
+    if HANDLED.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    let backtrace: Vec<BacktraceFrame> = Backtrace::new().into();
+    let count = unsafe { COUNT };
+    let truncated = if backtrace.len() > count { backtrace.len() - count } else { 0 };
+    let backtrace: Backtrace = backtrace.into_iter().take(count).collect::<Vec<_>>().into();
+    eprintln!("Stack Overflow:\n{:?}", backtrace);
+    if truncated > 0 {
+        eprintln!("... and {} more", truncated);
+    }
+    std::process::exit(1);
 }
