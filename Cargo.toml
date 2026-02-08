@@ -15,4 +15,4 @@ exclude = [".github/", "bors.toml", "rustfmt.toml"]
 [dependencies]
 backtrace = "0.3.65"
 libc = "0.2.126"
-nix = "0.26.4"
+nix = { version = "0.31.1", features = ["signal"] }
